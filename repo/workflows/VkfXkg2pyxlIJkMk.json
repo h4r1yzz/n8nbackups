@@ -1,6 +1,6 @@
 {
   "createdAt": "2025-07-17T13:31:32.699Z",
-  "updatedAt": "2025-07-17T13:46:03.000Z",
+  "updatedAt": "2025-07-17T13:52:34.000Z",
   "id": "VkfXkg2pyxlIJkMk",
   "name": "My workflow 6",
   "active": false,
@@ -75,7 +75,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -860,
+        -740,
         40
       ],
       "id": "43be82ef-c558-4013-92dd-32fff1323be1",
@@ -137,7 +137,7 @@
     },
     {
       "parameters": {
-        "command": "git -C repo commmit -m \"Auto backup ({{ new Date().toISOString() }})\""
+        "command": "=git -C repo commit -m \"Auto backup ({{ new Date().toISOString() }})\""
       },
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
@@ -147,19 +147,6 @@
       ],
       "id": "743a18f7-822e-4503-a081-e7ee9beeef9d",
       "name": "git commit"
-    },
-    {
-      "parameters": {
-        "command": "npx n8n export:credentials --backup --output repo/credentials/"
-      },
-      "type": "n8n-nodes-base.executeCommand",
-      "typeVersion": 1,
-      "position": [
-        220,
-        -240
-      ],
-      "id": "eae84796-f3b4-4f1d-b573-422395367114",
-      "name": "Export Credentials"
     },
     {
       "parameters": {
@@ -173,6 +160,17 @@
       ],
       "id": "36e1838e-d66c-470d-89c3-62953fbd3a3a",
       "name": "git push"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        40
+      ],
+      "id": "0fe5e953-8e62-49b2-8b2d-62abe5512f00",
+      "name": "When clicking ‘Execute workflow’"
     }
   ],
   "connections": {
@@ -227,11 +225,6 @@
         ]
       ]
     },
-    "Export Credentials": {
-      "main": [
-        []
-      ]
-    },
     "git add": {
       "main": [
         [
@@ -264,6 +257,17 @@
           }
         ]
       ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Set Values",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -272,7 +276,7 @@
   "staticData": null,
   "meta": null,
   "pinData": {},
-  "versionId": "368a7448-55d0-4963-9212-61dc86eb1754",
+  "versionId": "70ccc963-1dd3-4f84-9d66-52e7ca6c4bd9",
   "triggerCount": 0,
   "tags": []
 }

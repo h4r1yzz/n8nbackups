@@ -1,10 +1,5 @@
 {
-  "createdAt": "2025-07-17T13:31:32.699Z",
-  "updatedAt": "2025-07-17T13:52:34.000Z",
-  "id": "VkfXkg2pyxlIJkMk",
-  "name": "My workflow 6",
-  "active": false,
-  "isArchived": false,
+  "name": "github pushed",
   "nodes": [
     {
       "parameters": {
@@ -53,13 +48,13 @@
             {
               "id": "acaf47df-fdbc-4936-b65d-161c5a8d7e91",
               "name": "token",
-              "value": "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",
+              "value": "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",
               "type": "string"
             },
             {
               "id": "1d330771-7b86-4fff-8fbd-1aab01dc36c1",
               "name": "repo",
-              "value": "n8nbackups.git",
+              "value": "n8nbackup.git",
               "type": "string"
             },
             {
@@ -171,8 +166,22 @@
       ],
       "id": "0fe5e953-8e62-49b2-8b2d-62abe5512f00",
       "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "command": "npx n8n export:credentials --backup --output repo/credentials/"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        260,
+        -220
+      ],
+      "id": "eae84796-f3b4-4f1d-b573-422395367114",
+      "name": "Export Credentials"
     }
   ],
+  "pinData": {},
   "connections": {
     "If3": {
       "main": [
@@ -270,13 +279,14 @@
       ]
     }
   },
+  "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "staticData": null,
-  "meta": null,
-  "pinData": {},
-  "versionId": "70ccc963-1dd3-4f84-9d66-52e7ca6c4bd9",
-  "triggerCount": 0,
+  "versionId": "160e6814-d33a-4ff7-9aac-0d6c931dbb03",
+  "meta": {
+    "instanceId": "254eecec01e06ce8084fb8b0a8b4b868b95dec323d964e6bb253fdaae504c098"
+  },
+  "id": "VkfXkg2pyxlIJkMk",
   "tags": []
 }

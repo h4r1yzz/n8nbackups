@@ -1,0 +1,389 @@
+{
+  "createdAt": "2025-07-17T12:11:31.197Z",
+  "updatedAt": "2025-07-17T12:11:31.197Z",
+  "id": "0Fi0E9a2IrPtMVA6",
+  "name": "My workflow 4",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "e2cc7ccb-8788-40aa-a97a-f3936067bdbd",
+      "name": "On clicking 'execute'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        -300,
+        80
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": "={{ $node[\"Loop Over Items\"].context[\"done\"] }}"
+        }
+      },
+      "id": "f75d6ce4-ecfc-4a98-8d43-4393c351b2bb",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        1020,
+        200
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "id": "adf82b7f-2b70-455d-a5f0-bfee021c3528",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -300,
+        280
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $workflow.id }}"
+        },
+        "workflowInputs": {
+          "value": {},
+          "schema": [],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "30dcb176-5ef1-4189-8517-b8baeff273ce",
+      "name": "Execute Workflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "position": [
+        1260,
+        200
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6cf546c5-5737-4dbd-851b-17d68e0a3780",
+              "name": "repo.owner",
+              "type": "string",
+              "value": "john-doe"
+            },
+            {
+              "id": "452efa28-2dc6-4ea3-a7a2-c35d100d0382",
+              "name": "repo.name",
+              "type": "string",
+              "value": "n8n-backup"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "14b752d3-5317-4351-851b-466bcb11087e",
+      "name": "Globals",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -80,
+        200
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "list",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $('Globals').item.json.repo.owner }}"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $('Globals').item.json.repo.name }}"
+        }
+      },
+      "id": "26549204-3155-49f9-b1fe-2ea2734df900",
+      "name": "List files",
+      "type": "n8n-nodes-base.github",
+      "position": [
+        580,
+        280
+      ],
+      "webhookId": "244ea8da-851f-4afb-980c-5e5973b6a1af",
+      "executeOnce": true,
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "filters": {},
+        "requestOptions": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "33c7c333-986d-49ac-b7c6-13f2e38670d0",
+      "name": "Get many workflows",
+      "type": "n8n-nodes-base.n8n",
+      "position": [
+        140,
+        200
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "4b1cab61-24cd-4473-b2e3-e6018ee00506",
+      "name": "Workflows",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        380,
+        280
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5e73d2e7-4b1a-4180-8af2-047e52eb8a0a",
+              "name": "repo.owner",
+              "type": "string",
+              "value": "={{ $('Globals').item.json.repo.owner }}"
+            },
+            {
+              "id": "22445c28-5431-45a5-86ca-0ab2ff26cff5",
+              "name": "repo.name",
+              "type": "string",
+              "value": "={{ $('Globals').item.json.repo.name }}"
+            },
+            {
+              "id": "232d9947-a43f-48a9-b385-da1aa8f5139e",
+              "name": "origin",
+              "type": "string",
+              "value": "n8n"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "6c974643-2218-4edf-8ec3-566a3c850789",
+      "name": "n8n",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        800,
+        80
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5e73d2e7-4b1a-4180-8af2-047e52eb8a0a",
+              "name": "repo.owner",
+              "type": "string",
+              "value": "={{ $('Globals').item.json.repo.owner }}"
+            },
+            {
+              "id": "22445c28-5431-45a5-86ca-0ab2ff26cff5",
+              "name": "repo.name",
+              "type": "string",
+              "value": "={{ $('Globals').item.json.repo.name }}"
+            },
+            {
+              "id": "232d9947-a43f-48a9-b385-da1aa8f5139e",
+              "name": "origin",
+              "type": "string",
+              "value": "github"
+            },
+            {
+              "id": "456ec816-8c15-498b-bbc5-a96abce95d59",
+              "name": "workflows",
+              "type": "array",
+              "value": "={{ $('Workflows').item.json.data }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "d682af4a-3096-4b73-9902-56a1e625fe41",
+      "name": "github",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        800,
+        280
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "content": "## Edit this node 👇",
+        "height": 80,
+        "width": 150,
+        "color": 4
+      },
+      "id": "a32f5f34-11a2-4529-9f8b-da2dc6c9a9b8",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -100,
+        40
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "On clicking 'execute'": {
+      "main": [
+        [
+          {
+            "node": "Globals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Globals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Globals": {
+      "main": [
+        [
+          {
+            "node": "Get many workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List files": {
+      "main": [
+        [
+          {
+            "node": "github",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many workflows": {
+      "main": [
+        [
+          {
+            "node": "Workflows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "n8n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflows": {
+      "main": [
+        [
+          {
+            "node": "List files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "github": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "25cc42ce-cc2e-4409-984c-22465abb4084",
+  "triggerCount": 0,
+  "tags": []
+}

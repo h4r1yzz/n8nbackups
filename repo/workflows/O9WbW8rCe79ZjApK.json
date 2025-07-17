@@ -1,0 +1,1299 @@
+{
+  "createdAt": "2025-07-13T13:33:01.033Z",
+  "updatedAt": "2025-07-15T15:51:59.000Z",
+  "id": "O9WbW8rCe79ZjApK",
+  "name": "card transaction",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "labelIds": [
+            "INBOX",
+            "Label_4395341220325084590"
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -860,
+        -60
+      ],
+      "id": "d5fad55f-7bfe-430c-a4be-ff76f80749f5",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8K7svnKObXtCjlYA",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "90a8d974-a610-4372-9ed1-8f1c762c53fb",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "38e90d71-fb5a-4133-880c-96e957915224",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "d5d0a348-4f92-48b6-a19d-d18320fe84aa",
+              "name": "subject",
+              "value": "={{ $json.subject }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -520,
+        -300
+      ],
+      "id": "697e4da0-0e68-4dd6-80ff-67ccdc8085fe",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -460,
+        180
+      ],
+      "id": "0da8d0c2-4c67-42b5-9a59-a3cc4f4c7e71",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "aiULIRZ2iAOiSgth",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Title: {{ $json.subject }}\nEmail body: {{ $json.text }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=YOU ARE AN INTELLIGENT EMAIL ANALYZER SPECIALIZED IN DETECTING CREDIT CARD PAYMENT EMAILS.\nYOUR TASK IS TO ANALYZE THE CONTENT OF A GIVEN EMAIL AND DETERMINE IF IT IS RELATED TO A CREDIT CARD PAYMENT.\n\nINSTRUCTIONS\n1️⃣ CLASSIFY THE EMAIL INTO ONE OF THESE CONFIDENCE LEVELS:\n  -\"High\" – Clearly a credit card payment (e.g., transaction alert, payment confirmation).\n  -\"Medium\" – Possibly payment-related but not explicit (e.g., subscription renewals, account balance updates).\n  -\"Low\" – Not payment-related (e.g., marketing emails, security alerts, general banking updates).\n\n2️⃣ CONSIDER THE FOLLOWING FACTORS:\n  ✅ **Email Subject:** Does it mention “payment”, “transaction”, “due,” “charged,” or similar keywords?\n  ✅ **Email Body:** Does it confirm a transaction or mention a specific amount?\n  ✅ **Sender:** Is the email from a known bank or financial institution?\n\n3️⃣ RESPOND IN THE FOLLOWING JSON FORMAT:\n```json\n{\n  \"confidence\": \"high\" | \"medium\" | \"low\",\n  \"reason\": \"Detected keywords in subject & body\" | \"Sender is a bank\" | \"Does not match payment-related criteria\"\n}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -420,
+        -60
+      ],
+      "id": "dca5b30a-ad72-41fc-972f-e212cf273e0c",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"confidence\": {\n\t\t\t\"type\": \"string\",\n            \"enum\": [\"high\", \"low\"]\n\t\t},\n\t\t\"reason\": {\n\t\t\t\"type\": \"string\"\n\t\t}\n\t},\n  \"required\": [\"confidence\", \"reason\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -280,
+        180
+      ],
+      "id": "f2a70e4f-88a4-4a89-bdd2-db154bc2c26c",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "409c9218-4558-4b05-b3ea-620c5be3574c",
+              "leftValue": "={{ $json.output.confidence }}",
+              "rightValue": "high",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "fc46f09d-75e4-4f2d-bd25-2f0b85b12b04",
+              "leftValue": "={{ $json.output.confidence }}",
+              "rightValue": "medium",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -100,
+        -40
+      ],
+      "id": "623efc67-acaa-45e4-8036-e3500fe26b83",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Edit Fields').item.json.id }}",
+        "labelIds": [
+          "Label_4395341220325084590"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        200,
+        -320
+      ],
+      "id": "3fbef00d-9392-4ed8-b570-c4d876860306",
+      "name": "Add label to message",
+      "webhookId": "e8f68b87-f8d3-4ca7-becd-62d84e9e34c3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8K7svnKObXtCjlYA",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $('Edit Fields').item.json.text }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"payment_details\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"amount\": {\n          \"type\": \"string\",\n          \"description\": \"The payment amount\"\n        }\n      }\n    },\n    \"transaction_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"The date the payment was made\"\n    },\n    \"merchant\": {\n      \"type\": \"string\",\n      \"description\": \"The name of the merchant\"\n    },\n    \"payment_method\": {\n      \"type\": \"string\",\n      \"description\": \"The method of payment used\"\n    },\n    \"card_last_four\": {\n      \"type\": \"string\",\n      \"description\": \"The last 4 digits of the credit card used\"\n    }\n  },\n  \"required\": [\"amount\", \"transaction_date\", \"merchant\", \"payment_method\", \"card_last_four\"]\n}\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        -40
+      ],
+      "id": "4cec044a-4eb0-4c86-8427-2c1b481a62c3",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        280,
+        200
+      ],
+      "id": "811c2eaf-e7d2-4f8f-a275-2edfd42544ad",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "aiULIRZ2iAOiSgth",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        260
+      ],
+      "id": "5e365f2d-00d6-42f7-8ac6-90936c82a377",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1jiRk-WtZrcOdkganFx0RYKvI3F-JyM4ZPqjANlqzNyQ",
+          "mode": "list",
+          "cachedResultName": "Card Payment",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jiRk-WtZrcOdkganFx0RYKvI3F-JyM4ZPqjANlqzNyQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jiRk-WtZrcOdkganFx0RYKvI3F-JyM4ZPqjANlqzNyQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "payment_method": "={{ $json.output.payment_method }}",
+            "card_last_four": "={{ $json.output.card_last_four }}",
+            "merchant": "={{ $json.output.merchant }}",
+            "transaction_date": "={{ $json.output.transaction_date }}",
+            "amount ": "={{ $json.output.payment_details.amount }}"
+          },
+          "matchingColumns": [
+            "amount "
+          ],
+          "schema": [
+            {
+              "id": "amount ",
+              "displayName": "amount ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "transaction_date",
+              "displayName": "transaction_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "merchant",
+              "displayName": "merchant",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "card_last_four",
+              "displayName": "card_last_four",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "payment_method",
+              "displayName": "payment_method",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "justification",
+              "displayName": "justification",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        600,
+        -40
+      ],
+      "id": "cf49c8cb-daf4-4f65-9fd5-2d3429f42b67",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NwD5aE2o5zjQZOUS",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Card Transaction Details\n\nAmount:  {{ $json['amount '] }}\nTransaction Date: {{ $json.transaction_date }}\nMerchant: {{ $json.merchant }}\nPayment Method: {{ $json.payment_method }}\nCard Last Four Digits: {{ $json.card_last_four }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=📌 Overview\nYou are an AI-powered financial assistant responsible for:\n\nAnalyzing credit card transactions\nDetecting anomalies\nGathering merchant information\nProviding structured risk assessment\nYour job is to route tasks to the appropriate tools and format outputs properly for the Structured Output Parser.\n\n🛠 Tools & When to Use Them\n1️⃣ Pinecone Vector Store (Anomaly Detection)\nCompare the new transaction to historical spending.\nIdentify if the transaction is unusual compared to past patterns.\n\n2️⃣ Wikipedia Tool + SerpAPI (Merchant Lookup)\nIf a merchant is unknown, search Wikipedia first.\nIf no result is found, use SerpAPI to search the web.\nValidate if the merchant is a known business, subscription service, or fraudulent entity.\n\n3️⃣ Calculator (Math Operations)\nUse this tool for spending pattern calculations.\n\n🚦 Rules for Using Tools\n✅ Use Pinecone first to check if the transaction is anomalous.\n✅ Use Wikipedia for merchant search → if no result, use SerpAPI.\n✅ Ensure all outputs follow a structured format.\n\n🧪 Example Workflow\n📥 New Transaction Arrives\nInput: \"A $119.99 transaction from CANVA* I04417–839220 on 2025–02–04 was detected.\"*\nAction Taken:\n\nPinecone Vector Store → Check historical transactions.\nWikipedia Tool → Lookup merchant.\nSerpAPI (if Wikipedia fails) → Get merchant details.\nAI outputs structured JSON to Output Parser.\n\n⏰ Final Reminders\nToday’s Date & Time: {{ $now }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        820,
+        -120
+      ],
+      "id": "c55fddd7-3299-491a-9ec3-118e0c40f222",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        540,
+        300
+      ],
+      "id": "9f22d7c9-8007-418e-9934-e1b4ba37f52e",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "aiULIRZ2iAOiSgth",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        720,
+        300
+      ],
+      "id": "052d10da-85bd-4c07-afc3-c77149467670",
+      "name": "SerpAPI",
+      "credentials": {
+        "serpApi": {
+          "id": "OFWhtKHyfB6QwMql",
+          "name": "SerpAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolWikipedia",
+      "typeVersion": 1,
+      "position": [
+        860,
+        320
+      ],
+      "id": "6ed27a4d-3504-49ee-877e-ae67fb2a7402",
+      "name": "Wikipedia"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        960,
+        320
+      ],
+      "id": "420c0137-90c4-4ef3-b8fc-264787bfadc3",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Work with you data in Pinecone Vector Store",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "card-transactions",
+          "mode": "list",
+          "cachedResultName": "card-transactions"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        1140,
+        140
+      ],
+      "id": "bdd6ff97-be6e-47c0-b502-50efb57479e5",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "79iOYN3CecLVFWMW",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 512
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1200,
+        300
+      ],
+      "id": "4b1f4515-aa8a-40f7-a449-ed74c7c8ff07",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "aiULIRZ2iAOiSgth",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"risk_level\": \"Low | Medium | High\",\n  \"anomaly_summary\": \"Short, clear summary of why this transaction is unusual\",\n  \"merchant_info\": {\n    \"merchant_name\": \"Extracted Name\",\n    \"merchant_category\": \"Subscription | Retail | Dining | Other\",\n    \"source\": \"Wikipedia | SerpAPI | No Data Found\"\n  },\n  \"detailed_analysis\": {\n    \"amount\": \"$XXX.XX\",\n    \"transaction_date\": \"YYYY-MM-DD\",\n    \"merchant\": \"Merchant Name\",\n    \"payment_method\": \"Visa | Mastercard | Amex | Other\",\n    \"anomaly_reasons\": [\n      \"New merchant detected\",\n      \"Transaction amount is higher than usual\",\n      \"Uncommon category for this user\"\n    ]\n  },\n  \"recommendations\": [\n    {\n      \"options\": \"Verify transaction manually\",\n      \"action\": \"Check your Apple account for active subscriptions\"\n    },\n    {\n      \"options\": \"Report as fraud\",\n      \"action\": \"Contact Chase customer support\"\n    },\n    {\n      \"options\": \"Log transaction for future monitoring\",\n      \"action\": \"Store this in an external record\"\n    }\n  ]\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1080,
+        300
+      ],
+      "id": "cc9433df-02f0-4a87-868c-785b737e5288",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": [
+          "Label_3144282303254007611"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2080,
+        60
+      ],
+      "id": "5e82ad70-b6d7-4964-bd29-297862298797",
+      "name": "Add label to message2",
+      "webhookId": "fd0d1e99-3ef5-4481-91dc-f4852bb2082f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8K7svnKObXtCjlYA",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"verdict\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"This email is safe.\",\n        \"This email is likely a phishing attempt.\"\n      ]\n    }\n  },\n  \"required\": [\"verdict\"]\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        760,
+        1080
+      ],
+      "id": "6cab1fa3-c00e-4f03-b436-9bb5b72fa3bf",
+      "name": "Structured Output Parser3"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        1040
+      ],
+      "id": "ba5fb96c-0581-46d4-946e-f04dcd04848d",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "aiULIRZ2iAOiSgth",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Evaluate the safety of the following email.\n\nHere are the VirusTotal results for all URLs extracted from the email:\n\nURL 1:\n- Malicious: {{ $json.data.attributes.stats.malicious }}\n- Suspicious: {{ $json.data.attributes.stats.suspicious }}\n- Harmless: {{ $json.data.attributes.stats.harmless }}\n- Undetected: {{ $json.data.attributes.stats.undetected }}\n(Repeat for each URL)\n\nRespond only with:\n- \"This email is safe.\"\n- \"This email is likely a phishing attempt.\"",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a cybersecurity analyst AI. Your task is to evaluate if an email is phishing or safe based on VirusTotal scan results for all URLs found in the email. Be concise, objective, and prioritize detections labeled \"malicious\" or \"suspicious.\" If all URLs are clean, conclude that the email is likely safe. If any are malicious or suspicious, flag it as potentially phishing.\n"
+        }
+      },
+      "id": "016b0be3-7927-4f04-83c8-4551a75fb928",
+      "name": "Content Analysis",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        520,
+        800
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "curlImport": "",
+        "httpVariantWarning": "",
+        "method": "GET",
+        "url": "=https://www.virustotal.com/api/v3/analyses/{{ $json.data.id }}",
+        "": "",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "virusTotalApi",
+        "provideSslCertificates": false,
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "resource",
+              "value": "https://developers.virustotal.com/v2.0/reference/url-report"
+            }
+          ]
+        },
+        "sendHeaders": false,
+        "sendBody": false,
+        "options": {},
+        "infoMessage": ""
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        600
+      ],
+      "id": "a5cd0c46-3ea7-4e10-92c3-62c13a485f4b",
+      "name": "VirusTotal HTTP Request1",
+      "extendsCredential": "virusTotalApi",
+      "credentials": {
+        "virusTotalApi": {
+          "id": "ivdSx6F0EjsBbWPN",
+          "name": "VirusTotal account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "curlImport": "",
+        "httpVariantWarning": "",
+        "method": "POST",
+        "url": "https://www.virustotal.com/api/v3/urls",
+        "": "",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "virusTotalApi",
+        "provideSslCertificates": false,
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $json.url }}"
+            }
+          ]
+        },
+        "sendHeaders": false,
+        "sendBody": false,
+        "options": {},
+        "infoMessage": ""
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        60,
+        600
+      ],
+      "id": "58556431-0033-447a-af3f-60bcb8e6a9e3",
+      "name": "VirusTotal HTTP Request",
+      "extendsCredential": "virusTotalApi",
+      "credentials": {
+        "virusTotalApi": {
+          "id": "ivdSx6F0EjsBbWPN",
+          "name": "VirusTotal account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.url }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "73f84944-6016-423c-adb7-6e8124193c08",
+      "name": "Has URL?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -320,
+        480
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract plain text and HTML\nconst text = $input.first().json.text || \"\";\nconst html = $input.first().json.textAsHtml || \"\";\n// Combine both sources\nconst content = `${text}\\n${html}`;\n\n// IOC Regexes\nconst urlRegex = /\\bhttps?:\\/\\/[^\\s<>\"')]+/gi;\nconst domainRegex = /\\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+(?:[a-z]{2,})\\b/gi;\nconst ipRegex = /\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b/g;\nconst emailRegex = /\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b/g;\n\n// Run regex matches\nconst urls = content.match(urlRegex) || [];\nconst domains = content.match(domainRegex) || [];\nconst ips = content.match(ipRegex) || [];\nconst emails = content.match(emailRegex) || [];\n\n// Deduplicate\nconst dedup = arr => [...new Set(arr)];\n\nconst results = [];\n\n// Structure like ioc-finder output\ndedup(urls).forEach(url => {\n  try {\n    results.push({ json: { type: \"url\", url, domain: new URL(url).hostname }});\n  } catch (_) {\n    results.push({ json: { type: \"url\", url }});\n  }\n});\ndedup(domains).forEach(domain => {\n  results.push({ json: { type: \"domain\", domain }});\n});\ndedup(ips).forEach(ip => {\n  results.push({ json: { type: \"ip\", ip }});\n});\ndedup(emails).forEach(email => {\n  results.push({ json: { type: \"email\", email }});\n});\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -580,
+        420
+      ],
+      "id": "08aea7a2-14f3-45e6-95e3-d35196d38709",
+      "name": "Code",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "34b9aa63-89e5-4145-b769-fc75ea93fd13",
+              "leftValue": "={{ $json.output.verdict }}",
+              "rightValue": "This email is likely a phishing attempt.",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1080,
+        740
+      ],
+      "id": "87e90163-ca15-4ecc-9331-05b7414396ac",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "57688b24-dff6-49eb-a9b8-afd7bcf83734",
+              "leftValue": "={{ $json.output.risk_level }}",
+              "rightValue": "=low",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1480,
+        180
+      ],
+      "id": "eb58a443-294a-49f6-a8fa-c1d33f293ef8",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "sendTo": "harrychandratsjan@gmail.com",
+        "subject": "Summary",
+        "emailType": "text",
+        "message": "=An email has been flagged as a potential phishing attempt.\n\n📤 Sender: {{ $('Gmail Trigger').item.json.headers.from }}\n🕒 Received: {{ $('Gmail Trigger').item.json.date }}\n\n🧪 Verdict: {{ $json.data[1].output.verdict }}\n\n📄 Summary: {{ $('AI Agent').item.json.output.anomaly_summary }}\n\n🏷️ Category: {{ $('AI Agent').item.json.output.merchant_info.merchant_category }}\n\n✅ Recommendation:\n{{ $('AI Agent').item.json.output.recommendations[0].action }}\n\n⚠️ Please review or forward to security for further analysis.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2060,
+        540
+      ],
+      "id": "d82185c8-bfd4-41e0-8a3c-0b83c8e27557",
+      "name": "Send a message",
+      "webhookId": "5bdefda4-0f66-44e2-9789-2efdfb683336",
+      "alwaysOutputData": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8K7svnKObXtCjlYA",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1640,
+        400
+      ],
+      "id": "84226dde-2b2c-4b69-acad-afc5322053cc",
+      "name": "Merge",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1860,
+        400
+      ],
+      "id": "058677fa-def9-43d4-b5cc-c57be4eb0261",
+      "name": "Aggregate"
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Add label to message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        []
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wikipedia": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Analysis": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Content Analysis",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Content Analysis",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VirusTotal HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Content Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VirusTotal HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "VirusTotal HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has URL?": {
+      "main": [
+        [
+          {
+            "node": "VirusTotal HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Has URL?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Add label to message2": {
+      "main": [
+        []
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Add label to message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "AI Agent": [
+      {
+        "json": {
+          "output": {
+            "risk_level": "low",
+            "anomaly_summary": "The transaction of RM 3.90 from Apple on 2025-07-12 is consistent with previous transactions. No anomalies detected in spending patterns.",
+            "merchant_info": {
+              "merchant_name": "Apple",
+              "merchant_category": "Digital Payments/Subscription Services",
+              "source": "Pinecone and additional search results"
+            },
+            "detailed_analysis": {
+              "amount": "RM 3.90",
+              "transaction_date": "2025-07-12",
+              "merchant": "Apple",
+              "payment_method": "Touch ‘n Go eWallet",
+              "anomaly_reasons": []
+            },
+            "recommendations": [
+              {
+                "options": "Monitor future transactions with Apple.",
+                "action": "Confirm if this was an expected purchase."
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "Content Analysis": [
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is likely a phishing attempt."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "95f05c28-0262-4f5f-a7e7-9263bf8315e1",
+  "triggerCount": 0,
+  "tags": []
+}

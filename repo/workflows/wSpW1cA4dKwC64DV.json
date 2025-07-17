@@ -1,0 +1,378 @@
+{
+  "createdAt": "2025-07-14T14:36:46.836Z",
+  "updatedAt": "2025-07-14T14:36:46.836Z",
+  "id": "wSpW1cA4dKwC64DV",
+  "name": "Phising analysis",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Extract plain text and HTML\nconst text = $input.first().json.text || \"\";\nconst html = $input.first().json.textAsHtml || \"\";\n// Combine both sources\nconst content = `${text}\\n${html}`;\n\n// IOC Regexes\nconst urlRegex = /\\bhttps?:\\/\\/[^\\s<>\"')]+/gi;\nconst domainRegex = /\\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+(?:[a-z]{2,})\\b/gi;\nconst ipRegex = /\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b/g;\nconst emailRegex = /\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b/g;\n\n// Run regex matches\nconst urls = content.match(urlRegex) || [];\nconst domains = content.match(domainRegex) || [];\nconst ips = content.match(ipRegex) || [];\nconst emails = content.match(emailRegex) || [];\n\n// Deduplicate\nconst dedup = arr => [...new Set(arr)];\n\nconst results = [];\n\n// Structure like ioc-finder output\ndedup(urls).forEach(url => {\n  try {\n    results.push({ json: { type: \"url\", url, domain: new URL(url).hostname }});\n  } catch (_) {\n    results.push({ json: { type: \"url\", url }});\n  }\n});\ndedup(domains).forEach(domain => {\n  results.push({ json: { type: \"domain\", domain }});\n});\ndedup(ips).forEach(ip => {\n  results.push({ json: { type: \"ip\", ip }});\n});\ndedup(emails).forEach(email => {\n  results.push({ json: { type: \"email\", email }});\n});\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7beae9a7-ca46-4015-aa47-a11a2cc3461e",
+      "name": "Code",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.url }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "a1e36fe9-f313-454a-a343-3a2e89f5a9c5",
+      "name": "Has URL?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        260,
+        60
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.virustotal.com/api/v3/urls",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "virusTotalApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $json.url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        180
+      ],
+      "id": "c6a17719-75e2-473c-b52e-17b4f4275e08",
+      "name": "VirusTotal HTTP Request",
+      "extendsCredential": "virusTotalApi",
+      "credentials": {
+        "virusTotalApi": {
+          "id": "ivdSx6F0EjsBbWPN",
+          "name": "VirusTotal account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://www.virustotal.com/api/v3/analyses/{{ $json.data.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "virusTotalApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "resource",
+              "value": "https://developers.virustotal.com/v2.0/reference/url-report"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        180
+      ],
+      "id": "fdd4513c-7e81-4aea-b049-941a660a2d4b",
+      "name": "VirusTotal HTTP Request1",
+      "extendsCredential": "virusTotalApi",
+      "credentials": {
+        "virusTotalApi": {
+          "id": "ivdSx6F0EjsBbWPN",
+          "name": "VirusTotal account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Evaluate the safety of the following email.\n\nHere are the VirusTotal results for all URLs extracted from the email:\n\nURL 1:\n- Malicious: {{ $json.data.attributes.stats.malicious }}\n- Suspicious: {{ $json.data.attributes.stats.suspicious }}\n- Harmless: {{ $json.data.attributes.stats.harmless }}\n- Undetected: {{ $json.data.attributes.stats.undetected }}\n(Repeat for each URL)\n\nRespond only with:\n- \"This email is safe.\"\n- \"This email is likely a phishing attempt.\"",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a cybersecurity analyst AI. Your task is to evaluate if an email is phishing or safe based on VirusTotal scan results for all URLs found in the email. Be concise, objective, and prioritize detections labeled \"malicious\" or \"suspicious.\" If all URLs are clean, conclude that the email is likely safe. If any are malicious or suspicious, flag it as potentially phishing.\n"
+        }
+      },
+      "id": "4872bae0-ba81-439b-a1eb-9d6bee13fa83",
+      "name": "Content Analysis",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1100,
+        460
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1000,
+        680
+      ],
+      "id": "088a5b10-0692-479f-b9f9-25cefe5faf7b",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "aiULIRZ2iAOiSgth",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"verdict\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"This email is safe.\",\n        \"This email is likely a phishing attempt.\"\n      ]\n    }\n  },\n  \"required\": [\"verdict\"]\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1400,
+        680
+      ],
+      "id": "0a8ac5f4-9e4c-4e15-9540-6230cdc8a39d",
+      "name": "Structured Output Parser3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const isPhishing = items.some(\n  item => item.json.output.verdict === \"This email is likely a phishing attempt.\"\n);\n\nreturn [\n  {\n    json: {\n      finalVerdict: isPhishing\n        ? \"This email is likely a phishing attempt.\"\n        : \"This email is safe.\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        320
+      ],
+      "id": "56968c89-c23d-452d-935c-0eff93e5dcb4",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -200,
+        0
+      ],
+      "id": "79ed66d8-90cc-4ee4-9bf2-801bd2b74fa6",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "connections": {
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Has URL?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has URL?": {
+      "main": [
+        [
+          {
+            "node": "VirusTotal HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VirusTotal HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "VirusTotal HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VirusTotal HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Content Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Analysis": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Content Analysis",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Content Analysis",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "Content Analysis": [
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is likely a phishing attempt."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      },
+      {
+        "json": {
+          "output": {
+            "verdict": "This email is safe."
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "ef2bcce8-d9c8-4e67-b5e6-61411c2d4990",
+  "triggerCount": 0,
+  "tags": []
+}

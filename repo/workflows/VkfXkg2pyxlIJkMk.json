@@ -1,0 +1,278 @@
+{
+  "createdAt": "2025-07-17T13:31:32.699Z",
+  "updatedAt": "2025-07-17T13:46:03.000Z",
+  "id": "VkfXkg2pyxlIJkMk",
+  "name": "My workflow 6",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9e9f3407-ae0d-41a7-8c02-4aa9cfc8ef15",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -280,
+        60
+      ],
+      "id": "3f3a6c1f-5224-40d8-91f5-e592d4373d8e",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "598f5f74-6e3a-49bc-8745-be0f0f5cbb2c",
+              "name": "username",
+              "value": "h4r1yzz",
+              "type": "string"
+            },
+            {
+              "id": "acaf47df-fdbc-4936-b65d-161c5a8d7e91",
+              "name": "token",
+              "value": "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",
+              "type": "string"
+            },
+            {
+              "id": "1d330771-7b86-4fff-8fbd-1aab01dc36c1",
+              "name": "repo",
+              "value": "n8nbackups.git",
+              "type": "string"
+            },
+            {
+              "id": "149583ab-d759-4350-8154-d091ea40df5d",
+              "name": "email",
+              "value": "harrychandratsjan@gmail.com",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -860,
+        40
+      ],
+      "id": "43be82ef-c558-4013-92dd-32fff1323be1",
+      "name": "Set Values"
+    },
+    {
+      "parameters": {
+        "command": "npx n8n export:workflow --backup --output repo/workflows"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        120,
+        80
+      ],
+      "id": "224e220c-247f-40dc-825c-4e2b7e31cbfe",
+      "name": "Export workflows"
+    },
+    {
+      "parameters": {
+        "command": "=export GITHUB_USER={{ $('Set Values').item.json.username }}\nexport GITHUB_TOKEN={{ $('Set Values').item.json.token }}\n\ngit init\ngit config user.name \"{{ $('Set Values').item.json.username }}\"\ngit config user.email \"{{ $('Set Values').item.json.email }}\"\necho \"# n8n Backups\" > README.md\ngit add README.md\ngit commit -m \"Initial commit: backup files\"\ngit branch -M main\ngit remote add origin \"https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/{{ $('Set Values').item.json.repo }}\"\ngit push -u origin main\n"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -80
+      ],
+      "id": "486f7a8f-76f5-44f4-b78f-f0063c7d9bac",
+      "name": "Create new repo"
+    },
+    {
+      "parameters": {
+        "command": "ls .git"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -500,
+        60
+      ],
+      "id": "07aa3465-ef04-4be4-b415-62764bff1eb6",
+      "name": "Check for repo",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "command": "git -C . add repo/"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        380,
+        100
+      ],
+      "id": "c08242b2-a3d2-46ca-b9ab-a5dcc92a1979",
+      "name": "git add"
+    },
+    {
+      "parameters": {
+        "command": "git -C repo commmit -m \"Auto backup ({{ new Date().toISOString() }})\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        580,
+        100
+      ],
+      "id": "743a18f7-822e-4503-a081-e7ee9beeef9d",
+      "name": "git commit"
+    },
+    {
+      "parameters": {
+        "command": "npx n8n export:credentials --backup --output repo/credentials/"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        220,
+        -240
+      ],
+      "id": "eae84796-f3b4-4f1d-b573-422395367114",
+      "name": "Export Credentials"
+    },
+    {
+      "parameters": {
+        "command": "git -C repo push"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        780,
+        100
+      ],
+      "id": "36e1838e-d66c-470d-89c3-62953fbd3a3a",
+      "name": "git push"
+    }
+  ],
+  "connections": {
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Create new repo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Export workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Values": {
+      "main": [
+        [
+          {
+            "node": "Check for repo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for repo": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Export workflows": {
+      "main": [
+        [
+          {
+            "node": "git add",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Export Credentials": {
+      "main": [
+        []
+      ]
+    },
+    "git add": {
+      "main": [
+        [
+          {
+            "node": "git commit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "git commit": {
+      "main": [
+        [
+          {
+            "node": "git push",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create new repo": {
+      "main": [
+        [
+          {
+            "node": "Export workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "368a7448-55d0-4963-9212-61dc86eb1754",
+  "triggerCount": 0,
+  "tags": []
+}

@@ -17,6 +17,8 @@ graph TD
     B --> |Low Confidence| I[No Further Action]
 ```
 
+![Workflow Diagram](repo/workflows/Fraud_detection.png)
+
 ## 🔍 Key Components
 
 ### 1. Workflow Trigger

@@ -90,8 +90,6 @@ graph TD
 ## 🔧 Customization
 The workflow can be easily modified to:
 - Add more detection rules
-- Change confidence thresholds
-- Adjust notification methods
 
 ## 📋 Prerequisites
 - Gmail account
